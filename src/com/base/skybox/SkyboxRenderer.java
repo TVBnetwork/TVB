@@ -13,56 +13,56 @@ import renderEngine.Loader;
 public class SkyboxRenderer {
 
 	private static final float SIZE = 500f;
-	
-	private static final float[] VERTICES = {        
-	    -SIZE,  SIZE, -SIZE,
-	    -SIZE, -SIZE, -SIZE,
-	    SIZE, -SIZE, -SIZE,
-	     SIZE, -SIZE, -SIZE,
-	     SIZE,  SIZE, -SIZE,
-	    -SIZE,  SIZE, -SIZE,
 
-	    -SIZE, -SIZE,  SIZE,
-	    -SIZE, -SIZE, -SIZE,
-	    -SIZE,  SIZE, -SIZE,
-	    -SIZE,  SIZE, -SIZE,
-	    -SIZE,  SIZE,  SIZE,
-	    -SIZE, -SIZE,  SIZE,
+	private static final float[] VERTICES = {
+			-SIZE,  SIZE, -SIZE,
+			-SIZE, -SIZE, -SIZE,
+			SIZE, -SIZE, -SIZE,
+			SIZE, -SIZE, -SIZE,
+			SIZE,  SIZE, -SIZE,
+			-SIZE,  SIZE, -SIZE,
 
-	     SIZE, -SIZE, -SIZE,
-	     SIZE, -SIZE,  SIZE,
-	     SIZE,  SIZE,  SIZE,
-	     SIZE,  SIZE,  SIZE,
-	     SIZE,  SIZE, -SIZE,
-	     SIZE, -SIZE, -SIZE,
+			-SIZE, -SIZE,  SIZE,
+			-SIZE, -SIZE, -SIZE,
+			-SIZE,  SIZE, -SIZE,
+			-SIZE,  SIZE, -SIZE,
+			-SIZE,  SIZE,  SIZE,
+			-SIZE, -SIZE,  SIZE,
 
-	    -SIZE, -SIZE,  SIZE,
-	    -SIZE,  SIZE,  SIZE,
-	     SIZE,  SIZE,  SIZE,
-	     SIZE,  SIZE,  SIZE,
-	     SIZE, -SIZE,  SIZE,
-	    -SIZE, -SIZE,  SIZE,
+			SIZE, -SIZE, -SIZE,
+			SIZE, -SIZE,  SIZE,
+			SIZE,  SIZE,  SIZE,
+			SIZE,  SIZE,  SIZE,
+			SIZE,  SIZE, -SIZE,
+			SIZE, -SIZE, -SIZE,
 
-	    -SIZE,  SIZE, -SIZE,
-	     SIZE,  SIZE, -SIZE,
-	     SIZE,  SIZE,  SIZE,
-	     SIZE,  SIZE,  SIZE,
-	    -SIZE,  SIZE,  SIZE,
-	    -SIZE,  SIZE, -SIZE,
+			-SIZE, -SIZE,  SIZE,
+			-SIZE,  SIZE,  SIZE,
+			SIZE,  SIZE,  SIZE,
+			SIZE,  SIZE,  SIZE,
+			SIZE, -SIZE,  SIZE,
+			-SIZE, -SIZE,  SIZE,
 
-	    -SIZE, -SIZE, -SIZE,
-	    -SIZE, -SIZE,  SIZE,
-	     SIZE, -SIZE, -SIZE,
-	     SIZE, -SIZE, -SIZE,
-	    -SIZE, -SIZE,  SIZE,
-	     SIZE, -SIZE,  SIZE
+			-SIZE,  SIZE, -SIZE,
+			SIZE,  SIZE, -SIZE,
+			SIZE,  SIZE,  SIZE,
+			SIZE,  SIZE,  SIZE,
+			-SIZE,  SIZE,  SIZE,
+			-SIZE,  SIZE, -SIZE,
+
+			-SIZE, -SIZE, -SIZE,
+			-SIZE, -SIZE,  SIZE,
+			SIZE, -SIZE, -SIZE,
+			SIZE, -SIZE, -SIZE,
+			-SIZE, -SIZE,  SIZE,
+			SIZE, -SIZE,  SIZE
 	};
-	
+
 	private static String[] TEXTURE_FILES = {"Skybox/right", "Skybox/left", "Skybox/top", "Skybox/bottom", "Skybox/back", "Skybox/front"};
 	private RawModel cube;
 	private int textureID;
 	private SkyboxShader shader;
-	
+
 	public SkyboxRenderer(Loader loader, Matrix4f projectionMatrix){
 		cube = loader.loadToVAO(VERTICES, 3);
 		textureID = loader.loadCubeMap(TEXTURE_FILES);
@@ -71,10 +71,11 @@ public class SkyboxRenderer {
 		shader.loadProjectionMatrix(projectionMatrix);
 		shader.stop();
 	}
-	
-	public void render(Camera camera){
+
+	public void render(Camera camera, float r, float g, float b){
 		shader.start();
 		shader.loadViewMatrix(camera);
+		shader.loadFogColour(r, g, b);
 		GL30.glBindVertexArray(cube.getVaoID());
 		GL20.glEnableVertexAttribArray(0);
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
