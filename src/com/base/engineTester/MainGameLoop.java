@@ -5,12 +5,15 @@ import java.util.List;
 import java.util.Random;
 
 import org.lwjgl.opengl.Display;
+import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 
 import entities.Camera;
 import entities.Entity;
 import entities.Light;
 import entities.Player;
+import guis.GuiRenderer;
+import guis.GuiTexture;
 import models.TexturedModel;
 import renderEngine.DisplayManager;
 import renderEngine.Loader;
@@ -20,7 +23,10 @@ import terrains.Terrain;
 import textures.ModelTexture;
 import textures.TerrainTexture;
 import textures.TerrainTexturePack;
-import toolbox.MousePicker;
+import water.WaterFrameBuffers;
+import water.WaterRenderer;
+import water.WaterShader;
+import water.WaterTile;
 
 public class MainGameLoop {
 
@@ -38,14 +44,16 @@ public class MainGameLoop {
         TerrainTexturePack texturePack = new TerrainTexturePack(backgroundTexture, rTexture, gTexture, bTexture);
         TerrainTexture blendMap = new TerrainTexture(loader.loadTexture("blendMap"));
         Terrain terrain = new Terrain(0,-1,loader, texturePack, blendMap, "heightMap");
+
+        List <Terrain> terrains = new ArrayList<Terrain>();
+        terrains.add(terrain);
+
+        //Terrain underground = new Terrain(0,-1,loader, texturePack, blendMap, "heightMap4");
+        //terrains.add(underground);
+
         // *****************************************
 
         TexturedModel tree = new TexturedModel(OBJLoader.loadObjModel("pine", loader), new ModelTexture(loader.loadTexture("pine")));
-        TexturedModel grass = new TexturedModel(OBJLoader.loadObjModel("grassModel", loader), new ModelTexture(loader.loadTexture("grassTexture")));
-        TexturedModel flower = new TexturedModel(OBJLoader.loadObjModel("grassModel", loader), new ModelTexture(loader.loadTexture("flower")));
-        TexturedModel box = new TexturedModel(OBJLoader.loadObjModel("box", loader), new ModelTexture(loader.loadTexture("box")));
-        TexturedModel bobble = new TexturedModel(OBJLoader.loadObjModel("lowPolyTree", loader), new ModelTexture(loader.loadTexture("lowPolyTree")));
-        TexturedModel lamp = new TexturedModel(OBJLoader.loadObjModel("lamp", loader), new ModelTexture(loader.loadTexture("lamp")));
 
         ModelTexture fernTexture = new ModelTexture(loader.loadTexture("fern"));
         fernTexture.setNumberOfRows(2);
@@ -53,26 +61,15 @@ public class MainGameLoop {
 
 
         tree.getTexture().setReflectivity(0);
-        grass.getTexture().setHasTransparency(true);
-        grass.getTexture().setUseFakeLighting(true);
-        grass.getTexture().setReflectivity(0);
-        flower.getTexture().setHasTransparency(true);
-        flower.getTexture().setUseFakeLighting(true);
-        flower.getTexture().setReflectivity(0);
         fern.getTexture().setHasTransparency(true);
         fern.getTexture().setUseFakeLighting(false);
         fern.getTexture().setReflectivity(0);
-
-        lamp.getTexture().setReflectivity(0);
-        lamp.getTexture().setUseFakeLighting(true);
-        lamp.getTexture().setHasTransparency(true);
 
         List <Light> lights = new ArrayList<Light>();
 
         List<Entity> entities = new ArrayList<Entity>();
 
         float x=0, y=0, z=0;
-
 
         Random random = new Random();
 
@@ -82,13 +79,7 @@ public class MainGameLoop {
                 z = random.nextFloat() * -600;
                 y = terrain.getHeightOfTerrain(x, z);
 
-                entities.add(new Entity(bobble, new Vector3f(x, y, z), 0, random.nextFloat() * 360, 0, 0.9f));
-
                 entities.add(new Entity(fern, random.nextInt(4), new Vector3f(x-20, y, z), 0, random.nextFloat() * 360, 0, 1.5f));
-
-                entities.add(new Entity(grass, new Vector3f(x, y, z), 0, 0, 0, 1.8f));
-
-                entities.add(new Entity(flower, new Vector3f(x, y, z), 0, 0, 0, 2.3f));
             }
 
             if (i % 3 == 0) {
@@ -97,89 +88,59 @@ public class MainGameLoop {
                 y = terrain.getHeightOfTerrain(x, z);
 
                 entities.add(new Entity(tree, new Vector3f(x, y, z), 0, 0, 0, random.nextFloat() * 1 + 1));
-
-                x = random.nextFloat() * 800;
-                z = random.nextFloat() * -600;
-                y = terrain.getHeightOfTerrain(x, z)+5;
-
-                entities.add(new Entity(box, new Vector3f(x, y, z), 0, 0, 0, random.nextFloat() * 1 + 4));
-
             }
-
         }
 
-        Light sun = new Light(new Vector3f(400,1000,-400), new Vector3f(0.1f,0.1f,0.1f));
+        GuiRenderer guiRenderer = new GuiRenderer(loader);
 
+        List<GuiTexture> mainGUI = new ArrayList<GuiTexture>();
+        List<GuiTexture> guiMap = new ArrayList<GuiTexture>();
+
+        GuiTexture gui1 = new GuiTexture(loader.loadTexture("socuwan"), new Vector2f(0.5f, 0.5f), new Vector2f(0.25f, 0.25f));
+        GuiTexture gui2 = new GuiTexture(loader.loadTexture("thinmatrix"), new Vector2f(0.30f, 0.58f), new Vector2f(0.4f, 0.4f));
+        GuiTexture gui3 = new GuiTexture(loader.loadTexture("health"), new Vector2f(-0.74f, 0.925f), new Vector2f(0.25f, 0.25f));
+        mainGUI.add(gui1);
+        mainGUI.add(gui2);
+        mainGUI.add(gui3);
+
+        Light sun = new Light(new Vector3f(400,1000,-400), new Vector3f(1.0f,1.0f,1.0f));
         lights.add(sun); // main sun light
-
-        x = 400;
-        z = -530;
-        y = terrain.getHeightOfTerrain(x, z);
-        float lampLight_yOffset = 15; // this is approximately the height of the lamp post which we add to the height of the light
-
-        entities.add(new Entity(lamp, new Vector3f(x, y, z), 0, 0, 0, 1));
-        lights.add(new Light(new Vector3f(x, y+lampLight_yOffset, z), new Vector3f(0, 0, 2), new Vector3f(1.0f, 0.01f, 0.002f)));
-
-        x = +490;
-        z = -400-60;
-        y = terrain.getHeightOfTerrain(x, z);
-
-        Entity lampEntity1 = new Entity(lamp, new Vector3f(x, y, z), 0, 0, 0, 1);
-        entities.add(lampEntity1);
-        Light light1 = new Light(new Vector3f(x, y+lampLight_yOffset, z), new Vector3f(2, 2, 2), new Vector3f(1.0f, 0.01f, 0.002f));
-        lights.add(light1);
-
-        x = +490;
-        z = -350;
-        y = terrain.getHeightOfTerrain(x, z);
-
-        Entity lampEntity2 = new Entity(lamp, new Vector3f(x, y, z), 0, 0, 0, 1);
-        entities.add(lampEntity2);
-        Light light2 = new Light(new Vector3f(x, y+lampLight_yOffset, z), new Vector3f(2,0,0), new Vector3f(1.0f, 0.01f, 0.002f));
-        lights.add(light2);
-
 
         TexturedModel avatar = new TexturedModel(OBJLoader.loadObjModel("player",  loader), new ModelTexture(loader.loadTexture("playerTexture")));
 
         Player player = new Player(avatar, new Vector3f(400,0,-400), 0,180,0,1);
         Camera camera = new Camera(player);
 
-        float time = 0;
-        float sunIntensity = 0;
-        float timeDelay = 100; // make sure the delay is the same as in the skybox renderer.
+        MasterRenderer renderer = new MasterRenderer(loader,0);
 
-        MasterRenderer renderer = new MasterRenderer(loader, timeDelay);
-        MousePicker picker = new MousePicker(camera, renderer.getProjectionMatrix(), terrain);
+        WaterShader waterShader = new WaterShader();
+        WaterRenderer waterRenderer = new WaterRenderer(loader, waterShader, renderer.getProjectionMatrix());
+        List<WaterTile> waters = new ArrayList<WaterTile>();
+        waters.add(new WaterTile(550, -550, 0));
 
+
+        WaterFrameBuffers fbos = new WaterFrameBuffers();
+        GuiTexture gui = new GuiTexture(fbos.getReflectionTexture(), new Vector2f(-0.5f, 0.5f), new Vector2f(0.3f, 0.3f));
+        guiMap.add(gui);
 
         while(!Display.isCloseRequested()) {
             camera.move();
             player.move(terrain);
-            picker.update();
+            fbos.bindReflectionFrameBuffer();
 
-            time += DisplayManager.getFrameTimeSeconds() * 1000;
+            renderer.renderScene(entities, terrains, lights, camera, player);
 
-            sunIntensity = (float) ((float) (Math.sin(Math.toRadians(time/timeDelay))+1.0)/2.0);
-            sun.setColour(new Vector3f(sunIntensity, sunIntensity, sunIntensity));
+            fbos.unbindCurrentFrameBuffer();
 
-
-            Vector3f terrainPointChosen = picker.getCurrentTerrainPoint();
-            if (terrainPointChosen != null){
-                lampEntity1.setPosition(terrainPointChosen);;
-                light1.setPosition(new Vector3f(terrainPointChosen.x, terrainPointChosen.y+lampLight_yOffset, terrainPointChosen.z));
-            }
-//			System.out.println(picker.getCurrentRay());
-            renderer.processEntity(player);
-            renderer.processTerrain(terrain);
-
-            for (Entity entity : entities){
-                renderer.processEntity(entity);
-            }
-            renderer.render(lights, camera);
-
+            renderer.renderScene(entities, terrains, lights, camera, player);
+            waterRenderer.render(waters, camera);
+            guiRenderer.render(mainGUI);
+            guiRenderer.render(guiMap);
             DisplayManager.updateDisplay();
         }
 
+        fbos.cleanUp();
+        guiRenderer.cleanUp();
         renderer.cleanUp();
         loader.cleanUp();
 

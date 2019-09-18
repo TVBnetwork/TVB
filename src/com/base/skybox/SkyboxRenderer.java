@@ -102,7 +102,7 @@ public class SkyboxRenderer {
 		texture1 = nightTextureID;
 		texture2 = dayTextureID;
 
-		blendFactor = (float) ((float) (Math.sin(Math.toRadians(time/delay))+1.0)/2.0);
+		blendFactor = 1;//(float) ((float) (Math.sin(Math.toRadians(time/delay))+1.0)/2.0);
 
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, texture1);
