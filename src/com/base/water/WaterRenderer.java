@@ -30,7 +30,7 @@ public class WaterRenderer {
 	}
 
 	public void render(List<WaterTile> water, Camera camera) {
-		prepareRender(camera);	
+		prepareRender(camera);
 		for (WaterTile tile : water) {
 			Matrix4f modelMatrix = Maths.createTransformationMatrix(new Vector3f(tile.getX(), tile.getHeight(), tile.getZ()), 0, 0, 0, WaterTile.TILE_SIZE);
 			shader.loadModelMatrix(modelMatrix);
@@ -38,14 +38,14 @@ public class WaterRenderer {
 		}
 		unbind();
 	}
-	
+
 	private void prepareRender(Camera camera){
 		shader.start();
 		shader.loadViewMatrix(camera);
 		GL30.glBindVertexArray(quad.getVaoID());
 		GL20.glEnableVertexAttribArray(0);
 	}
-	
+
 	private void unbind(){
 		GL20.glDisableVertexAttribArray(0);
 		GL30.glBindVertexArray(0);
