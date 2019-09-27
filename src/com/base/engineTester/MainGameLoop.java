@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.Random;
 
 import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.util.vector.Vector4f;
 
 import entities.Camera;
 import entities.Entity;
@@ -120,23 +123,32 @@ public class MainGameLoop {
         WaterShader waterShader = new WaterShader();
         WaterRenderer waterRenderer = new WaterRenderer(loader, waterShader, renderer.getProjectionMatrix());
         List<WaterTile> waters = new ArrayList<WaterTile>();
-        waters.add(new WaterTile(400, -400, 0));
+        WaterTile water = new WaterTile(400, -400, 0);
+        waters.add(water);
 
 
         WaterFrameBuffers fbos = new WaterFrameBuffers();
-        GuiTexture gui = new GuiTexture(fbos.getReflectionTexture(), new Vector2f(-0.7f, 0.7f), new Vector2f(0.25f, 0.25f));
-        guiMap.add(gui);
+        GuiTexture refraction = new GuiTexture(fbos.getRefractionDepthTexture(), new Vector2f(0.5f, 0.5f), new Vector2f(0.25f, 0.25f));
+        GuiTexture reflection = new GuiTexture(fbos.getReflectionTexture(), new Vector2f(-0.5f, 0.5f), new Vector2f(0.25f, 0.25f));
+        guiMap.add(refraction);
+        guiMap.add(reflection);
 
         while(!Display.isCloseRequested()) {
             camera.move();
             player.move(terrain);
+
+            GL11.glEnable(GL30.GL_CLIP_DISTANCE0);
+
             fbos.bindReflectionFrameBuffer();
+            renderer.renderScene(entities, terrains, lights, camera, player, new Vector4f(0, 1, 0, -water.getHeight()));
 
-            renderer.renderScene(entities, terrains, lights, camera, player);
+            fbos.bindRefractionFrameBuffer();
+            renderer.renderScene(entities, terrains, lights, camera, player, new Vector4f(0, -1, 0, water.getHeight()));
 
+            GL11.glDisable(GL30.GL_CLIP_DISTANCE0);
             fbos.unbindCurrentFrameBuffer();
 
-            renderer.renderScene(entities, terrains, lights, camera, player);
+            renderer.renderScene(entities, terrains, lights, camera, player, new Vector4f(0, 1, 0, 100000)); //<-- hack to make sure nothing ever gets clipped
             waterRenderer.render(waters, camera);
             //guiRenderer.render(mainGUI);
             guiRenderer.render(guiMap);

@@ -22,9 +22,14 @@ uniform vec2 offset;				// allows having multiple textures in the same file
 const float density = 0.0035;
 const float gradient = 5.0;
 
+uniform vec4 plane;
+
 void main() {
 
 	vec4 worldPosition = transformationMatrix * vec4(position,1.0); // position is the position of the current vertex
+
+	gl_ClipDistance[0] = dot(worldPosition, plane);
+
 	vec4 positionRelativeToCam = viewMatrix * worldPosition;
 	gl_Position = projectionMatrix * positionRelativeToCam;  	
 	pass_textureCoordinates = (textureCoordinates / numberOfRows) + offset;

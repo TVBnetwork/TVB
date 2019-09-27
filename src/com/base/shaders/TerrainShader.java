@@ -30,6 +30,7 @@ public class TerrainShader extends ShaderProgram {
 	private int location_gTexture;
 	private int location_bTexture;
 	private int location_blendMap;
+	private int location_plane;
 
 
 	public TerrainShader(){
@@ -57,6 +58,7 @@ public class TerrainShader extends ShaderProgram {
 		location_gTexture = super.getUniformLocation("gTexture");
 		location_bTexture = super.getUniformLocation("bTexture");
 		location_blendMap = super.getUniformLocation("blendMap");
+		location_plane = super.getUniformLocation("plane");
 
 
 		location_lightPosition = new int[MAX_LIGHTS];
@@ -76,6 +78,10 @@ public class TerrainShader extends ShaderProgram {
 		super.loadInt(location_gTexture, 2);
 		super.loadInt(location_bTexture, 3);
 		super.loadInt(location_blendMap, 4);
+	}
+
+	public void loadClipPlane(Vector4f plane) {
+		super.load4DVector(location_plane, plane);
 	}
 
 	public void loadSkyColour(float r, float g, float b){

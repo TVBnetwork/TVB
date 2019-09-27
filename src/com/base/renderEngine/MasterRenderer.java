@@ -66,7 +66,7 @@ public class MasterRenderer {
         GL11.glDisable(GL11.GL_CULL_FACE);
     }
 
-    public void renderScene(List<Entity> entities, List<Terrain> terrains, List<Light> lights, Camera camera, Player player){
+    public void renderScene(List<Entity> entities, List<Terrain> terrains, List<Light> lights, Camera camera, Player player, Vector4f clipPlane){
         for (Terrain terrain: terrains) {
             processTerrain(terrain);
         }
@@ -75,13 +75,14 @@ public class MasterRenderer {
             processEntity(entity);
         }
         processEntity(player);
-        render(lights, camera);
+        render(lights, camera, clipPlane);
     }
 
-    public void render(List<Light> lights, Camera camera){
+    public void render(List<Light> lights, Camera camera, Vector4f clipPlane){
         prepare();
 
         shader.start();
+        shader.loadClipPlane(clipPlane);
         shader.loadSkyColour(RED, GREEN, BLUE);
         shader.loadLights(lights);
         shader.loadViewMatrix(camera);
@@ -89,6 +90,7 @@ public class MasterRenderer {
         shader.stop();
 
         terrainShader.start();
+        terrainShader.loadClipPlane(clipPlane);
         terrainShader.loadSkyColour(RED, GREEN, BLUE);
         terrainShader.loadLights(lights);
         terrainShader.loadViewMatrix(camera);
